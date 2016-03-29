@@ -1,4 +1,4 @@
-#include "http.h"
+#include "common.h"
 
 /*parse hostname and path from url
  * return 0 for success
@@ -20,20 +20,44 @@ int parse_url(char *url, char **host, char **path){
   return 0;
 }
 
-int main(int argc, char **argv){
-  char *host, *path;
+/*send http get commands
+ * */
+int send_http_get(int fd, const char *path, const char *host){
+  char command[HTTP_COMMAND_SIZE] = { 0 };
 
-  if(argc !=2){
-    printf("Usage: %s URL\n", argv[0]);
-    exit(-1);
+  snprintf(command, sizeof(command), "GET /%s HTTP/1.0\r\n", path);
+  if(send(fd, command, strlen(command), 0) == -1){
+    printf("Error when send comamnd:\n%s\n", command);
+    return -1;  
   }
 
-  if(parse_url(argv[1], &host, &path)){
-    printf("can not parse host name and path from %s\n", argv[1]);
-    exit(-1);
+  memset(command, 0, sizeof(command));
+  snprintf(command, sizeof(command), "Host: %s\r\n", host);
+  if(send(fd, command, strlen(command), 0) == -1){
+    printf("Error when send comamnd:\n%s\n", command);
+    return -1;  
   }
 
-  printf("connecting to %s/%s\n", host, path);
+  memset(command, 0, sizeof(command));
+  snprintf(command, sizeof(command), "Connection: close\r\n\r\n");
+  if(send(fd, command, strlen(command), 0) == -1){
+    printf("Error when send comamnd:\n%s\n", command);
+    return -1;  
+  }
 
+  return 0;
+}
+
+/*
+ *Read and display get result
+ * */
+int display_result(int fd){
+  int len;
+  char buf[BUF_SIZE + 1] = { 0 };
+
+  while((len = recv(fd, buf, BUF_SIZE, 0)) > 0){
+    buf[len] = '\0';
+    printf("%s\n", buf);
+  }
   return 0;
 }
