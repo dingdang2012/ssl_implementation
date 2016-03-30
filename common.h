@@ -12,5 +12,7 @@
 #define BUF_SIZE 256
 
 int parse_url(char *url, char **host, char **path);
-int send_http_get(int fd, const char *path, const char *host);
+int send_http_get(int fd, const char *path, const char *host, const char *proxy_host, const char *proxy_user, const char *proxy_pw);
 int display_result(int fd);
+int parse_proxy_param(char *spec, char **proxy_host, int *proxy_port, char **proxy_user, char **proxy_pw);
+char *str_itoa(int i);

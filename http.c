@@ -22,10 +22,14 @@ int parse_url(char *url, char **host, char **path){
 
 /*send http get commands
  * */
-int send_http_get(int fd, const char *path, const char *host){
+int send_http_get(int fd, const char *path, const char *host, const char *proxy_host, 
+  const char *proxy_user, const char *proxy_pw){
   char command[HTTP_COMMAND_SIZE] = { 0 };
 
-  snprintf(command, sizeof(command), "GET /%s HTTP/1.0\r\n", path);
+  if(proxy_host)
+    snprintf(command, sizeof(command), "GET http://%s/%s HTTP/1.0\r\n", host, path);
+  else
+    snprintf(command, sizeof(command), "GET /%s HTTP/1.0\r\n", path);
   if(send(fd, command, strlen(command), 0) == -1){
     printf("Error when send comamnd:\n%s\n", command);
     return -1;  
@@ -61,3 +65,43 @@ int display_result(int fd){
   }
   return 0;
 }
+
+/* parse proxy parameters from spec
+ * */
+int parse_proxy_param(char *spec, char **proxy_host,
+                      int *proxy_port, char **proxy_user, char **proxy_pw){
+  char *login_sep, *colon_sep;
+  printf("Proxy spec is %s\n", spec);
+  if(!strncmp(spec, "http://", 7))
+    spec += 7;
+  login_sep = strchr(spec, '@');
+  if(login_sep){  /*there is username:password */
+    colon_sep = strchr(spec, ':');
+    if(!colon_sep || colon_sep > login_sep){
+      printf("No password in '%s'\n", spec);
+      return -1;
+    }
+    *colon_sep = '\0';
+    *proxy_user = spec;
+    *proxy_pw = colon_sep + 1;
+    *login_sep = '\0';
+    spec = login_sep + 1;
+  }
+
+  /*proxy_server:proxy_port*/
+  colon_sep = strchr(spec, ':');
+  if(colon_sep){
+    *colon_sep = '\0';
+    *proxy_host = spec;
+    *proxy_port = atoi(colon_sep + 1);
+    if(*proxy_port == 0){
+      printf("Wrong proxy port\n");
+      exit(EXIT_FAILURE);
+    }
+  }else{
+    *proxy_port = HTTP_PORT;
+    *proxy_host = spec;
+  }
+  return 0;
+}
+
