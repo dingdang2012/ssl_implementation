@@ -1,4 +1,5 @@
 #include "common.h"
+#include "base64/base64.h"
 
 /*parse hostname and path from url
  * return 0 for success
@@ -40,6 +41,25 @@ int send_http_get(int fd, const char *path, const char *host, const char *proxy_
   if(send(fd, command, strlen(command), 0) == -1){
     printf("Error when send comamnd:\n%s\n", command);
     return -1;  
+  }
+
+  /*send base64 encoded username and password*/
+  if(proxy_user){
+    int cred_len = strlen(proxy_user) + strlen(proxy_pw) + 1;
+    unsigned char *proxy_cred = calloc(cred_len, sizeof(char));
+    unsigned char *auth_str = calloc((cred_len*4/3) + 1, sizeof(char));
+
+    snprintf((char *)proxy_cred, cred_len, "%s:%s", proxy_user, proxy_pw);
+    base64_encode((const unsigned char *)proxy_cred, cred_len, auth_str);
+    memset(command, 0, sizeof(command));
+    snprintf(command, sizeof(command), "Proxy-Authorization: BASIC %s\r\n", auth_str);
+    if(send(fd, command, strlen(command), 0) == -1){
+      free(proxy_cred);
+      free(auth_str);
+      return -1;
+    }
+    free(proxy_cred);
+    free(auth_str);
   }
 
   memset(command, 0, sizeof(command));

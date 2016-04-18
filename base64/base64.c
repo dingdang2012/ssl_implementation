@@ -34,7 +34,7 @@ void base64_encode(const unsigned char *input, int len, unsigned char *output){
 
 static int char_to_index(const unsigned char c){
   unsigned char *tmp = NULL;
-  tmp = strchr(base64, c);
+  tmp = strchr((const char *)base64, c);
   if(tmp)
     return (tmp - base64);
   else

@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "base64.h"
 
 int main(int argc, char **argv){
   unsigned char *buf = NULL;
@@ -15,7 +16,7 @@ int main(int argc, char **argv){
   if(!strncmp(argv[1], "-e", 2)){ /*encoding*/
     buf = (unsigned char *)calloc(strlen(argv[2])*4/3 + 1, sizeof(unsigned char));
     assert(buf); 
-    base64_encode(argv[2], strlen(argv[2]), buf);
+    base64_encode((const unsigned char *)argv[2], strlen(argv[2]), buf);
     printf("%s\n", buf);
     free(buf), buf = NULL;
     return 0;
@@ -24,7 +25,7 @@ int main(int argc, char **argv){
   if(!strncmp(argv[1], "-d", 2)){ /*decoding*/
     buf = (unsigned char *)calloc(strlen(argv[2])*3/4 + 1, sizeof(unsigned char));
     assert(buf);
-    base64_decode(argv[2], strlen(argv[2]), buf);
+    base64_decode((const unsigned char *)argv[2], strlen(argv[2]), buf);
     printf("%s\n", buf);
     free(buf), buf = NULL;
   }

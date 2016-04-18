@@ -5,11 +5,12 @@ SUBDIR=base64 test
 
 all: finish
 
-client: http.o client.o misc.o
-	$(CC) $(CFLAGS) http.o client.o misc.o -o client
+base64:
+	@echo ">>> Building base64 library"
+	@make -C base64
 
-http.o: http.c
-	$(CC) $(CFLAGS) -c http.c
+http.o: http.c base64
+	$(CC) $(CFLAGS) -c http.c -lbase64
 
 client.o: client.c
 	$(CC) $(CFLAGS) -c client.c
@@ -17,9 +18,8 @@ client.o: client.c
 misc.o: misc.c
 	$(CC) $(CFLAGS) -c misc.c
 
-base64:
-	@echo ">>> Building base64 library"
-	@make -C base64
+client: http.o client.o misc.o base64
+	$(CC) $(CFLAGS) http.o client.o misc.o -o client -L./base64 -lbase64
 
 test: base64
 	@echo ">>> Building test case"
@@ -28,7 +28,7 @@ test: base64
 tags:
 	ctags -R
 
-finish: client $(SUBDIR)
+finish: $(SUBDIR) client
 
 clean:
 	rm -f client http.o client.o misc.o core.* tags
